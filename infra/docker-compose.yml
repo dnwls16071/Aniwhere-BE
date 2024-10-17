@@ -1,0 +1,12 @@
+services:
+  db:
+    container_name: mysql
+    image: mysql:latest
+    restart: always
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=aniwhere
+      - MYSQL_DATABASE=aniwhere
+    ports:
+      - "3306:3306"
