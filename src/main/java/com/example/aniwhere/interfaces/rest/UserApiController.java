@@ -1,7 +1,7 @@
 package com.example.aniwhere.interfaces.rest;
 
 import com.example.aniwhere.domain.user.dto.UserDTO;
-import com.example.aniwhere.domain.token.JwtToken;
+import com.example.aniwhere.domain.token.dto.JwtToken;
 import com.example.aniwhere.domain.user.User;
 import com.example.aniwhere.application.user.UserService;
 import com.example.aniwhere.infrastructure.jwt.TokenProvider;

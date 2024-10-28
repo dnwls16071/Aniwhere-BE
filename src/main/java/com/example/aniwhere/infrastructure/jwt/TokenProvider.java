@@ -1,6 +1,6 @@
 package com.example.aniwhere.infrastructure.jwt;
 
-import com.example.aniwhere.domain.token.JwtToken;
+import com.example.aniwhere.domain.token.dto.JwtToken;
 import com.example.aniwhere.domain.token.RefreshToken;
 import com.example.aniwhere.domain.user.Role;
 import com.example.aniwhere.domain.user.User;
