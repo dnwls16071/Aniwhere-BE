@@ -10,3 +10,10 @@ services:
       - MYSQL_DATABASE=aniwhere
     ports:
       - "3306:3306"
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
