@@ -83,7 +83,6 @@ public class UserDTO {
 		private Long id;
 		private String email;		// 이메일
 		private String nickname;	// 별명
-		private String name;		// 이름
 		private String gender;		// 성별 ex) male, female
 		private String birthday;	// 월일 ex) 0101
 		private String birthyear;	// 생년 ex) 2000
