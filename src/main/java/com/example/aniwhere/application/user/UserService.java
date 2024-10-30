@@ -6,7 +6,6 @@ import com.example.aniwhere.domain.user.User;
 import com.example.aniwhere.global.error.exception.DuplicateEmailException;
 import com.example.aniwhere.global.error.ErrorCode;
 import com.example.aniwhere.global.error.exception.InvalidTokenException;
-import com.example.aniwhere.global.error.exception.LoginFailureException;
 import com.example.aniwhere.global.error.exception.NotFoundUserException;
 import com.example.aniwhere.infrastructure.jwt.JwtProperties;
 import com.example.aniwhere.infrastructure.persistence.UserRepository;
@@ -49,6 +48,8 @@ public class UserService {
 				.birthday(request.getBirthday())
 				.birthyear(request.getBirthyear())
 				.sex(request.getSex())
+				.provider("self")
+				.providerId("self")
 				.role(request.getRole())
 				.build();
 		User savedUser = userRepository.save(newUser);
@@ -59,18 +60,14 @@ public class UserService {
 	public JwtToken signin(UserDTO.UserSignInRequest request) {
 		log.info("서비스 계층 로그인 로직 수행");
 
-		Optional<User> user = userRepository.findByEmail(request.getEmail());
-		if (user.isEmpty()) {
+		Optional<User> findUser = userRepository.findByEmail(request.getEmail());
+		if (findUser.isEmpty()) {
 			throw new NotFoundUserException("해당 유저는 존재하지 않는 유저입니다.", ErrorCode.NOT_FOUND_USER);
 		}
 
-		User getUser = user.get();
-		if (!passwordEncoder.matches(request.getPassword(), getUser.getPassword())) {
-			throw new LoginFailureException("비밀번호가 일치하지 않습니다.", ErrorCode.LOGIN_FAILURE);
-		}
-
-		String accessToken = tokenProvider.generateAccessToken(getUser);
-		String refreshToken = tokenProvider.generateRefreshToken(getUser);
+		User user = findUser.get();
+		String accessToken = tokenProvider.generateAccessToken(user);
+		String refreshToken = tokenProvider.generateRefreshToken(user);
 
 		return JwtToken.builder()
 				.accessToken(accessToken)

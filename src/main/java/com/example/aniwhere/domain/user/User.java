@@ -37,4 +37,16 @@ public class User extends Common {
 
 	@Column(name = "provider")
 	private String provider;
+
+	@Column(name = "providerId")
+	private String providerId;
+
+	// 정보 업데이트
+	public User updateUser(User user) {
+		this.nickname = user.getNickname();
+		this.email = user.getEmail();
+		this.providerId = user.getProviderId();
+		this.provider = user.getProvider();
+		return this;
+	}
 }
