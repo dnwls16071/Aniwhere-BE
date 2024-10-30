@@ -90,17 +90,15 @@ public class KakaoService {
 		Long id = jsonNode.get("id").asLong();
 		String profile_image_url = jsonNode.get("kakao_account").get("profile").get("profile_image_url").asText();
 		String nickname = jsonNode.get("kakao_account").get("profile").get("nickname").asText();
-		String name = jsonNode.get("kakao_account").get("nickname").asText();
-		String email = jsonNode.get("email").asText();
+		String email = jsonNode.get("kakao_account").get("email").asText();
 		String birthday = jsonNode.get("kakao_account").get("birthday").asText();
 		String birthyear = jsonNode.get("kakao_account").get("birthyear").asText();
-		String gender = jsonNode.get("gender").asText();
+		String gender = jsonNode.get("kakao_account").get("gender").asText();
 
 		return UserDTO.KakaoUserInfo.builder()
 				.id(id)
 				.profile_image_url(profile_image_url)
 				.nickname(nickname)
-				.name(name)
 				.birthday(birthday)
 				.birthyear(birthyear)
 				.email(email)
