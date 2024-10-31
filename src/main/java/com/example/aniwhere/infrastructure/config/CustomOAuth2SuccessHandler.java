@@ -1,0 +1,37 @@
+package com.example.aniwhere.infrastructure.config;
+
+import com.example.aniwhere.domain.user.MyUserDetails;
+import com.example.aniwhere.domain.user.User;
+import com.example.aniwhere.infrastructure.jwt.TokenProvider;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+
+
+import java.io.IOException;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+	private final TokenProvider tokenProvider;
+
+	@Override
+	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+		log.info("OAuth2 Login 성공 후 처리 핸들러 호출");
+		MyUserDetails details = (MyUserDetails) authentication.getPrincipal();
+		User user = details.getUser();
+
+		String accessToken = tokenProvider.generateAccessToken(user);
+		String refreshToken = tokenProvider.generateRefreshToken(user);
+
+		response.setHeader("Authorization", "Bearer " + accessToken);
+		response.setHeader("Refresh-Token", refreshToken);
+	}
+}
