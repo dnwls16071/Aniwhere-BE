@@ -38,12 +38,10 @@ public class MyUserDetails implements UserDetails, OAuth2User {
 		return user.getEmail();
 	}
 
-
-	// 일반 로그인용
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		Collection<GrantedAuthority> collection = new ArrayList<>();
-		collection.add(() -> user.getRole().name());
+		collection.add(() -> {return String.valueOf(user.getRole());});
 		return collection;
 	}
 
