@@ -2,9 +2,10 @@ package com.example.aniwhere.application.user;
 
 import com.example.aniwhere.domain.user.MyUserDetails;
 import com.example.aniwhere.domain.user.Role;
+import com.example.aniwhere.domain.user.Sex;
 import com.example.aniwhere.domain.user.User;
-import com.example.aniwhere.infrastructure.oauth2.ExtendedKakaoOAuth2UserInfo;
 import com.example.aniwhere.infrastructure.oauth2.KakaoUserInfo;
+import com.example.aniwhere.infrastructure.oauth2.OAuth2UserInfo;
 import com.example.aniwhere.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,26 +31,41 @@ public class PrincipalOAuthDetailsService extends DefaultOAuth2UserService {
 	}
 
 	private OAuth2User processOAuth2User(OAuth2UserRequest request, OAuth2User oAuth2User) {
-		ExtendedKakaoOAuth2UserInfo oAuth2UserInfo = null;
+		KakaoUserInfo kakaoUserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
 
-		oAuth2UserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
-
-		Optional<User> getUser = userRepository.findByEmail(oAuth2UserInfo.getEmail());
+		Optional<User> findUser = userRepository.findByEmail(kakaoUserInfo.getEmail());
 		User user;
 
-		if (getUser.isPresent()) {
-			user = getUser.get();
+		if (findUser.isPresent()) {
+			user = findUser.get();
+			updateUserInfo(user, kakaoUserInfo);
+		} else {
+			user = User.builder()
+					.nickname(kakaoUserInfo.getProvider() + "_" + kakaoUserInfo.getProviderId())
+					.email(kakaoUserInfo.getEmail())
+					.provider(kakaoUserInfo.getProvider())
+					.providerId(kakaoUserInfo.getProviderId())
+					.role(Role.ROLE_USER)
+					.sex(Sex.valueOf(kakaoUserInfo.getSex()))
+					.birthyear(kakaoUserInfo.getBirthyear())
+					.birthday(kakaoUserInfo.getBirthday())
+					.build();
+			userRepository.save(user);
 		}
 
-		user = User.builder()
-				.email(oAuth2UserInfo.getEmail())
-				.role(Role.ROLE_USER)
-				.birthyear(oAuth2UserInfo.getBirthYear())
-				.birthday(oAuth2UserInfo.getBirthDay())
-				.sex(oAuth2UserInfo.getGender())
-				.build();
+		MyUserDetails myUserDetails = new MyUserDetails(user, oAuth2User.getAttributes());
+		return myUserDetails;
+	}
 
-		userRepository.save(user);
-		return new MyUserDetails(user, oAuth2User.getAttributes());
+	// 스프링 시큐리티 회원가입과 OAuth2 회원가입 시 메일이 중복되는 경우 개인 정보를 업데이트한다.
+	private User updateUserInfo(User user, OAuth2UserInfo oAuth2UserInfo) {
+		return user.updateUser(
+				User.builder()
+						.nickname(oAuth2UserInfo.getProvider() + "_" + oAuth2UserInfo.getProviderId())
+						.email(oAuth2UserInfo.getEmail())
+						.provider(oAuth2UserInfo.getProvider())
+						.providerId(oAuth2UserInfo.getProviderId())
+						.build()
+		);
 	}
 }
