@@ -15,6 +15,7 @@ public enum ErrorCode {
 	NOT_FOUND_USER(400, "C007", "사용자를 찾을 수 없습니다."),
 	LOGIN_FAILURE(400, "C008", "이메일은 맞지만 패스워드가 일치하지 않습니다."),
 	INVALID_TOKEN(400, "C009", "유효하지 않은 토큰입니다."),
+	UNAUTHORIZED(401, "C010", "권한이 없습니다."),
 
 	INTERNAL_SERVER_ERROR(500, "S001", "서버 측 에러입니다."),
 	NOT_FOUND_REFRESH_TOKEN(500, "S002", "리프레시 토큰을 찾을 수 없습니다.");

@@ -18,6 +18,21 @@ public class ErrorResponse {
 	private List<FieldError> errors;
 	private String code;
 
+	private ErrorResponse(String message) {
+		this.message = message;
+	}
+
+	private ErrorResponse(String message, String code) {
+		this.message = message;
+		this.code = code;
+	}
+
+	private ErrorResponse(String message, String code, List<FieldError> errors) {
+		this.message = message;
+		this.code = code;
+		this.errors = errors;
+	}
+
 	public ErrorResponse(final ErrorCode code, final List<FieldError> errors) {
 		this.message = code.getMessage();
 		this.status = code.getStatus();
@@ -30,6 +45,18 @@ public class ErrorResponse {
 		this.status = code.getStatus();
 		this.code = code.getCode();
 		this.errors = new ArrayList<>();
+	}
+
+	public static ErrorResponse from(String message){
+		return new ErrorResponse(message);
+	}
+
+	public static ErrorResponse of(String message, String code) {
+		return new ErrorResponse(message, code);
+	}
+
+	public static ErrorResponse of(String message, String code, BindingResult result) {
+		return new ErrorResponse(message, code, FieldError.of(result));
 	}
 
 	public static ErrorResponse of(final ErrorCode code, final BindingResult bindingResult) {
