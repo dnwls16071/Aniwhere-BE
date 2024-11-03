@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class PrincipalOAuthDetailsService extends DefaultOAuth2UserService {
 	}
 
 	private OAuth2User processOAuth2User(OAuth2UserRequest request, OAuth2User oAuth2User) {
+		String oAuthToken = request.getAccessToken().getTokenValue();
 		KakaoUserInfo kakaoUserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
 
 		Optional<User> findUser = userRepository.findByEmail(kakaoUserInfo.getEmail());
@@ -53,8 +55,7 @@ public class PrincipalOAuthDetailsService extends DefaultOAuth2UserService {
 			userRepository.save(user);
 		}
 
-		MyUserDetails myUserDetails = new MyUserDetails(user, oAuth2User.getAttributes());
-		return myUserDetails;
+		return new MyUserDetails(user, oAuth2User.getAttributes(), oAuthToken);
 	}
 
 	// 스프링 시큐리티 회원가입과 OAuth2 회원가입 시 메일이 중복되는 경우 개인 정보를 업데이트한다.
