@@ -1,49 +1,33 @@
 package com.example.aniwhere.infrastructure.jwt;
 
+import com.example.aniwhere.application.cache.RedisService;
 import com.example.aniwhere.domain.token.dto.JwtToken;
 import com.example.aniwhere.domain.token.RefreshToken;
 import com.example.aniwhere.domain.user.Role;
 import com.example.aniwhere.domain.user.User;
 import com.example.aniwhere.infrastructure.persistence.RefreshTokenRepository;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.security.Key;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-@RequiredArgsConstructor
-@Component
 @Slf4j
-public class TokenProvider implements InitializingBean {
+@Component
+@RequiredArgsConstructor
+public class TokenProvider {
 
 	private final JwtProperties jwtProperties;
-	private final RedisTemplate<String, String> redisTemplate;
+	private final RedisService redisService;
 	private final RefreshTokenRepository refreshTokenRepository;
-	private Key key;
-
-	@Value("${jwt.secretKey}")
-	private String secret;
-
-	@Override
-	public void afterPropertiesSet() {
-		byte[] keyBytes = Decoders.BASE64.decode(secret);
-		this.key = Keys.hmacShaKeyFor(keyBytes);
-	}
 
 	public String generateAccessToken(User user) {
 		Date now = new Date();
@@ -55,7 +39,7 @@ public class TokenProvider implements InitializingBean {
 				.setExpiration(expiry)
 				.setSubject(user.getEmail())
 				.claim("id", user.getId())
-				.signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey().getBytes())
+				.signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
 				.compact();
 	}
 
@@ -70,16 +54,10 @@ public class TokenProvider implements InitializingBean {
 				.setExpiration(expiry)
 				.setSubject(user.getEmail())
 				.claim("id", user.getId())
-				.signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey().getBytes())
+				.signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
 				.compact();
 
-		redisTemplate.opsForValue()
-				.set(
-						"RT: " + user.getEmail(),
-						refreshToken,
-						jwtProperties.getRefresh_token_expiration_time(),
-						TimeUnit.MILLISECONDS
-				);
+		redisService.saveRefreshToken(user.getEmail(), refreshToken);
 
 		RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(user.getId())
 				.map(entity -> entity.update(refreshToken))
@@ -92,7 +70,7 @@ public class TokenProvider implements InitializingBean {
 	public boolean validateToken(String token) {
 		try {
 			Jwts.parser()
-					.setSigningKey(jwtProperties.getSecretKey().getBytes())
+					.setSigningKey(jwtProperties.getSecretKey())
 					.parseClaimsJws(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {
@@ -140,7 +118,7 @@ public class TokenProvider implements InitializingBean {
 
 	public Claims getClaims(String token) {
 		return Jwts.parser()
-				.setSigningKey(jwtProperties.getSecretKey().getBytes())
+				.setSigningKey(jwtProperties.getSecretKey())
 				.parseClaimsJws(token)
 				.getBody();
 	}

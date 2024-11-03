@@ -14,6 +14,7 @@ public class MyUserDetails implements UserDetails, OAuth2User {
 
 	private final User user;
 	private Map<String, Object> attributes;
+	private String oAuthAccessToken;
 
 	// spring security 일반 로그인용
 	public MyUserDetails(User user) {
@@ -21,9 +22,10 @@ public class MyUserDetails implements UserDetails, OAuth2User {
 	}
 
 	// spring security OAuth2 로그인용
-	public MyUserDetails(User user, Map<String, Object> attributes) {
+	public MyUserDetails(User user, Map<String, Object> attributes, String oAuthAccessToken) {
 		this.user = user;
 		this.attributes = attributes;
+		this.oAuthAccessToken = oAuthAccessToken;
 	}
 
 	// OAuth2 로그인용
@@ -31,7 +33,6 @@ public class MyUserDetails implements UserDetails, OAuth2User {
 	public Map<String, Object> getAttributes() {
 		return attributes;
 	}
-
 
 	@Override
 	public String getName() {

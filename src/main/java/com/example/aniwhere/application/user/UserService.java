@@ -1,5 +1,6 @@
 package com.example.aniwhere.application.user;
 
+import com.example.aniwhere.application.cache.RedisService;
 import com.example.aniwhere.domain.user.dto.UserDTO;
 import com.example.aniwhere.domain.token.dto.JwtToken;
 import com.example.aniwhere.domain.user.User;
@@ -13,12 +14,10 @@ import com.example.aniwhere.infrastructure.jwt.TokenProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -27,7 +26,7 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final RedisTemplate<String, String> redisTemplate;
+	private final RedisService redisService;
 	private final JwtProperties jwtProperties;
 	private final TokenProvider tokenProvider;
 
@@ -69,6 +68,8 @@ public class UserService {
 		String accessToken = tokenProvider.generateAccessToken(user);
 		String refreshToken = tokenProvider.generateRefreshToken(user);
 
+		redisService.saveRefreshToken(user.getEmail(), refreshToken);
+
 		return JwtToken.builder()
 				.accessToken(accessToken)
 				.refreshToken(refreshToken)
@@ -87,21 +88,7 @@ public class UserService {
 		Claims claims = tokenProvider.getClaims(accessToken);
 		String email = claims.getSubject();
 
-		redisTemplate.opsForValue().set(
-				"BAT: " + email,
-				accessToken,
-				jwtProperties.getAccess_token_expiration_time(),
-				TimeUnit.MILLISECONDS
-		);
-
-		redisTemplate.opsForValue().set(
-				"BRT: " + email,
-				refreshToken,
-				jwtProperties.getRefresh_token_expiration_time(),
-				TimeUnit.MILLISECONDS
-		);
-
-		redisTemplate.delete("RT: " + email);
+		redisService.saveBlackListJwtToken(email, jwtToken);
 	}
 
 	public User findById(Long userId) {
