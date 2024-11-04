@@ -45,6 +45,10 @@ public class RedisService {
 		);
 	}
 
+	public String getRefreshToken(String key) {
+		return redisTemplate.opsForValue().get(key);
+	}
+
 	public String getOAuthToken(String email) {
 		return redisTemplate.opsForValue().get("OAT: " + email);
 	}
