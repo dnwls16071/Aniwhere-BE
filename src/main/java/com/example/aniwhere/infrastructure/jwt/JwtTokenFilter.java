@@ -1,52 +1,62 @@
 package com.example.aniwhere.infrastructure.jwt;
 
-import com.example.aniwhere.application.user.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.List;
 
+@Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
+	private final static List<String> WHITE_LIST = List.of(
+			"/api/auth/login",
+			"/api/auth/signup",
+			"/error",
+			"/favicon.ico",
+			"/"
+	);
 	private final TokenProvider tokenProvider;
-	private final MyUserDetailsService myUserDetailsService;
 	private final static String HEADER_AUTHORIZATION = "Authorization";
 	private final static String TOKEN_PREFIX = "Bearer ";
 
 	@Override
-	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-		String[] excludePath = {
-				"/",
-				"/api/auth/login",
-				"/api/auth/signup",
-		};
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-		String path = request.getRequestURI();
-		return Arrays.stream(excludePath).anyMatch(path::startsWith);
-	}
+		String requestURI = request.getRequestURI();
+		log.info("요청 URI={}", requestURI);
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+		if (WHITE_LIST.contains(requestURI)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
+
 		String header = request.getHeader(HEADER_AUTHORIZATION);
+		log.info("헤더 정보={}", header);
 
 		if (header != null && header.startsWith(TOKEN_PREFIX)) {
 			String token = header.substring(7);
-			if (tokenProvider.validateToken(token)) {
-				Long userId = tokenProvider.getUserId(token);
+			log.info("액세스 토큰={}", token);
 
-				UserDetails userDetails = myUserDetailsService.loadUserByUsername(userId.toString());
-				if (userDetails != null) {
-					UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-					SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+			if (tokenProvider.validateToken(token)) {
+				String email = tokenProvider.getEmail(token);
+				log.info("현재 사용자 메일={}", email);
+
+				// 인증 객체 정보 저장
+				if (email != null) {
+					Authentication authentication = tokenProvider.getAuthentication(token);
+					SecurityContextHolder.getContext().setAuthentication(authentication);
 				}
 			}
 		}
