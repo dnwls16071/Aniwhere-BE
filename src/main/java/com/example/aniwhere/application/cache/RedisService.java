@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -64,5 +65,25 @@ public class RedisService {
 
 	public void deleteOAuthToken(String email) {
 		redisTemplate.delete("OAT: " + email);
+	}
+
+	public void saveAuthCode(String toEmail, String authCode, Duration duration) {
+		redisTemplate.opsForValue().set(
+				toEmail,
+				authCode,
+				duration
+		);
+	}
+
+	public boolean hasAuthCode(String authCode) {
+		return Boolean.TRUE.equals(redisTemplate.hasKey(authCode));
+	}
+
+	public String getAuthCode(String authCode) {
+		return redisTemplate.opsForValue().get(authCode);
+	}
+
+	public void deleteAuthCode(String authCode) {
+		redisTemplate.delete(authCode);
 	}
 }
