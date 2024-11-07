@@ -1,4 +1,5 @@
-name: Aniwhere CI/CD
+name: Aniwhere CI/CD 구축
+
 
 on:
   push:
