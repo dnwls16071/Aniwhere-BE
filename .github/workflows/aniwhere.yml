@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   deploy:
@@ -40,10 +41,10 @@ jobs:
           script_stop: true
 
           script: |
-            rm -rf /home/ubuntu/aniwhere/current
-            mkdir /home/ubuntu/aniwhere/current
-            mv /home/ubuntu/aniwhere/result/aniwhere.jar /home/ubuntu/aniwhere/current/aniwhere.jar
-            cd /home/ubuntu/aniwhere/current
+            rm -rf /home/ubuntu/Aniwhere-BE/current
+            mkdir /home/ubuntu/Aniwhere-BE/current
+            mv /home/ubuntu/Aniwhere-BE/result/aniwhere.jar /home/ubuntu/Aniwhere-BE/current/aniwhere.jar
+            cd /home/ubuntu/Aniwhere-BE/current
             sudo fuser -k -n tcp 8080 || true
             nohup java -jar aniwhere.jar > ./output.log 2>&1 &
-            rm -rf /home/ubuntu/aniwhere/result
+            rm -rf /home/ubuntu/Aniwhere-BE/result
