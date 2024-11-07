@@ -26,9 +26,6 @@ jobs:
       - name: 실행 권한 부여
         run: chmod +x ./gradlew
 
-      - name: gradlew wrapper 생성하기
-        run: gradle wrap
-
       - name: 테스트 코드가 없으므로 해당 과정을 제외하고 빌드하기
         run: ./gradlew clean build -x test
 
