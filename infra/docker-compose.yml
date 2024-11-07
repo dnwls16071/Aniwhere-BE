@@ -1,19 +1,37 @@
 services:
+  spring:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      aniwhere_db:
+        condition: service_healthy
+      aniwhere_redis:
+        condition: service_healthy
+
   aniwhere_db:
     container_name: mysql
     image: mysql:latest
-    restart: always
     volumes:
       - ./mysqldata:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=aniwhere
+      -  MYSQL_ROOT_PASSWORD=aniwhere
       - MYSQL_DATABASE=aniwhere
     ports:
       - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping" ]
+      interval: 5s
+      retries: 10
 
   aniwhere_redis:
     container_name: redis
     image: redis:latest
-    restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
