@@ -1,0 +1,3 @@
+[submodule "Aniwhere-BE-Private"]
+	path = Aniwhere-BE-Private
+	url = git@github.com:Project-aniwhere/Aniwhere-BE-Private.git
