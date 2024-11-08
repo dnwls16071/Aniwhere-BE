@@ -1,6 +1,5 @@
 name: Aniwhere CI/CD 구축
 
-
 on:
   push:
     branches:
@@ -21,7 +20,9 @@ jobs:
           distribution: 'temurin'
 
       - name: application.yml 파일 작성하기
-        run: echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
+        run: |
+          mkdir -p src/main/resources
+          echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
 
       - name: 실행 권한 부여
         run: chmod +x ./gradlew
