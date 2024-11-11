@@ -20,14 +20,13 @@ jobs:
           distribution: 'temurin'
 
       - name: application.yml 파일 작성하기
-        run: echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
+        run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.yml
 
       - name: 실행 권한 부여하기
         run: chmod +x ./gradlew
 
       - name: 빌드하기
         run: ./gradlew clean build -x test
-
 
       - name: AWS Resource에 접근할 수 있도록 AWS Credentials 설정하기
         uses: aws-actions/configure-aws-credentials@v4
@@ -64,6 +63,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script_stop: true
           script: |
             cd ~/app
             docker compose down || true
