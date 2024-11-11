@@ -1,8 +1,6 @@
 services:
   spring:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile
+    build: ..
     ports:
       - "8080:8080"
     depends_on:
@@ -15,7 +13,7 @@ services:
     container_name: mysql
     image: mysql:latest
     volumes:
-      - ./mysqldata:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=aniwhere
       - MYSQL_DATABASE=aniwhere
@@ -35,3 +33,6 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+
+volumes:
+  mysql_data:
