@@ -1,6 +1,6 @@
 services:
   spring:
-    build: ..
+    build: .    # 현재 Dockerfile 경로
     ports:
       - "8080:8080"
     depends_on:
