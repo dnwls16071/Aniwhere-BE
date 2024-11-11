@@ -1,5 +1,4 @@
-name: Aniwhere CI/CD 구축
-
+name: Deploy To EC2
 
 on:
   push:
@@ -22,41 +21,47 @@ jobs:
           distribution: 'temurin'
 
       - name: application.yml 파일 작성하기
-        run: echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
+        run: |
+          mkdir ./src/main/resources
+          echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
 
-      - name: 실행 권한 부여
-        run: chmod +x ./gradlew
+      - name: AWS Resource에 접근할 수 있도록 AWS Credentials 설정하기
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: 테스트 코드 과정을 제외하고 빌드하기
-        run: ./gradlew clean build -x test
+      - name: ECR에 로그인하기
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 빌드된 파일 이름 쉽게 변경하기
-        run: mv ./build/libs/*SNAPSHOT.jar ./aniwhere.jar
+      - name: Docker 이미지 생성하기
+        run: docker build -t aniwhere .
 
-      - name: SCP로 EC2에 빌드된 파일 전송하기
-        uses: appleboy/scp-action@v0.1.7
+      - name: Docker 이미지에 태그 붙이기
+        run: docker tag aniwhere ${{ steps.login-ecr.outputs.registry }}/aniwhere:latest
+
+      - name: ECR에 Docker 이미지 푸시하기
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/aniwhere:latest
+
+      - name: docker-compose.yml 전송하기
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: ./aniwhere.jar
-          target: /home/ubuntu/Aniwhere-BE/tobe
+          source: "docker-compose.yml, Dockerfile, build/libs/*.jar"
+          target: "~/app"
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          envs: APPLICATION_PROPERTIES
-          script_stop: true
           script: |
-            rm -rf /home/ubuntu/Aniwhere-BE/current                                           
-            mkdir /home/ubuntu/Aniwhere-BE/current                                                
-            mv /home/ubuntu/Aniwhere-BE/tobe/aniwhere.jar /home/ubuntu/Aniwhere-BE/current/aniwhere.jar   
-            cd /home/ubuntu/Aniwhere-BE/current
-            sudo fuser -k -n tcp 8080 || true 
-            nohup java -jar aniwhere.jar > ./output.log 2>&1 & 
-            rm -rf /home/ubuntu/Aniwhere-BE/tobe
+            cd ~/app
+            docker compose down || true
+            docker compose pull
+            docker compose up -d --build
