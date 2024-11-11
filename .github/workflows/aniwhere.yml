@@ -20,9 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: application.yml 파일 작성하기
-        run: |
-          mkdir ./src/main/resources
-          echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
+        run: echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
 
       - name: AWS Resource에 접근할 수 있도록 AWS Credentials 설정하기
         uses: aws-actions/configure-aws-credentials@v4
