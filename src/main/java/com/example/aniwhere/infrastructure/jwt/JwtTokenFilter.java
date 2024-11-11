@@ -22,6 +22,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 	private final static List<String> WHITE_LIST = List.of(
 			"/api/auth/login",
 			"/api/auth/signup",
+			"/api/auth/email/verifications-requests",
+			"/api/auth/email/verifications",
 			"/error",
 			"/favicon.ico",
 			"/"
